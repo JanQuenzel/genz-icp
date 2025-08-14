@@ -43,12 +43,15 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <fstream>
 
 namespace genz_icp_ros {
 
 using utils::EigenToPointCloud2;
 using utils::GetTimestamps;
 using utils::PointCloud2ToEigen;
+
+std::shared_ptr<std::ofstream> posesFile = nullptr;
 
 OdometryServer::OdometryServer(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
     : nh_(nh), pnh_(pnh), tf2_listener_(tf2_ros::TransformListener(tf2_buffer_)) {
@@ -174,6 +177,17 @@ void OdometryServer::PublishOdometry(const Sophus::SE3d &pose,
     odom_msg.header.frame_id = odom_frame_;
     odom_msg.pose.pose = tf2::sophusToPose(pose);
     odom_publisher_.publish(odom_msg);
+
+    // write to file:
+    if ( ! posesFile ) posesFile = std::make_shared<std::ofstream>("./genz_icp_after_map_poses.txt");
+    if( posesFile && posesFile->is_open() )
+    {
+        //std::cout << "hello! " << pose.params().transpose() << std::endl;
+        const Eigen::Vector3d t = pose.translation();
+        const Eigen::Quaterniond q = pose.so3().unit_quaternion();
+        (*posesFile) << (stamp.toNSec()) << " " << t.x() << " " << t.y() << " " << t.z()
+                     << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << std::endl;
+    }
 }
 
 void OdometryServer::PublishClouds(const ros::Time &stamp,
