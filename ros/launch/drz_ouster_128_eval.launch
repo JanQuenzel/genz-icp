@@ -2,7 +2,7 @@
 <launch>
   <!-- ROS paramaters -->
   <param name="/use_sim_time" value="true" />
-  <arg name="topic" default="/os_cloud_node/points"/>
+  <arg name="topic" default="/ouster/points"/>
   <arg name="odom_frame" default="odom"/>
   <arg name="base_frame" default=""/>
   <arg name="publish_odom_tf" default="true"/>
